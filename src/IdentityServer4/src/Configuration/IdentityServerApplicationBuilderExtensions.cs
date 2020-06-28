@@ -6,6 +6,7 @@ using IdentityServer4.Configuration;
 using IdentityServer4.Extensions;
 using IdentityServer4.Hosting;
 using IdentityServer4.Stores;
+using IdentityServer4.Stores.MongoDB;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -71,7 +72,11 @@ namespace Microsoft.AspNetCore.Builder
                 {
                     logger.LogInformation("You are using the in-memory version of the persisted grant store. This will store consent decisions, authorization codes, refresh and reference tokens in memory only. If you are using any of those features in production, you want to switch to a different store implementation.");
                 }
+                else if (persistedGrants.GetType().FullName == typeof(MongoDbPersistedGrantStore).FullName)
+                {
+                    logger.LogInformation("You are using the MongoDb version of the persisted grant store.");
 
+                }
                 var options = serviceProvider.GetRequiredService<IdentityServerOptions>();
                 ValidateOptions(options, logger);
 

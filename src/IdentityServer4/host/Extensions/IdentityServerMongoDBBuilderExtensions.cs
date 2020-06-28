@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityServer4.Stores.MongoDb;
 
 namespace IdentityServer4.Extensions
 {
@@ -66,7 +67,7 @@ namespace IdentityServer4.Extensions
 
             builder.Services.AddTransient<IClientStore, ClientStore>();
             builder.Services.AddTransient<IResourceStore, ResourceStore>();
-            builder.Services.AddTransient<ICorsPolicyService, DefaultCorsPolicyService>();
+            builder.Services.AddTransient<ICorsPolicyService, InMemoryCorsPolicyService>();
 
             return builder;
         }
@@ -78,8 +79,11 @@ namespace IdentityServer4.Extensions
             ConfigureIgnoreExtraElementsOperationalStore();
 
             builder.Services.AddScoped<IPersistedGrantDbContext, PersistedGrantDbContext>();
+            builder.Services.AddScoped<IPersistedDeviceFlowDbContext, PersistedDeviceFlowDbContext>();
 
             builder.Services.AddTransient<IPersistedGrantStore, MongoDbPersistedGrantStore>();
+            builder.Services.AddTransient<IDeviceFlowStore, MongoDbDeviceFlowStore>();
+
 
             var tokenCleanupOptions = new TokenCleanupOptions();
             tokenCleanUpOptions?.Invoke(tokenCleanupOptions);

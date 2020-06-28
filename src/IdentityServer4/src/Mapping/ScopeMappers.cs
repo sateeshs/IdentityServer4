@@ -8,13 +8,13 @@ using IdentityServer4.MongoDB.Entities;
 namespace IdentityServer4.MongoDB.Mappers
 {
     /// <summary>
-    /// Extension methods to map to/from entity/model for identity resources.
+    /// Extension methods to map to/from entity/model for scopes.
     /// </summary>
-    public static class IdentityResourceMappers
+    public static class ScopeMappers
     {
-        static IdentityResourceMappers()
+        static ScopeMappers()
         {
-            Mapper = new MapperConfiguration(cfg => cfg.AddProfile<IdentityResourceMapperProfile>())
+            Mapper = new MapperConfiguration(cfg => cfg.AddProfile<ScopeMapperProfile>())
                 .CreateMapper();
         }
 
@@ -25,9 +25,9 @@ namespace IdentityServer4.MongoDB.Mappers
         /// </summary>
         /// <param name="entity">The entity.</param>
         /// <returns></returns>
-        public static Models.IdentityResource ToModel(this IdentityResource entity)
+        public static Models.ApiScope ToModel(this ApiScope entity)
         {
-            return entity == null ? null : Mapper.Map<Models.IdentityResource>(entity);
+            return entity == null ? null : Mapper.Map<Models.ApiScope>(entity);
         }
 
         /// <summary>
@@ -35,9 +35,9 @@ namespace IdentityServer4.MongoDB.Mappers
         /// </summary>
         /// <param name="model">The model.</param>
         /// <returns></returns>
-        public static IdentityResource ToEntity(this Models.IdentityResource model)
+        public static ApiScope ToEntity(this Models.ApiScope model)
         {
-            return model == null ? null : Mapper.Map<IdentityResource>(model);
+            return model == null ? null : Mapper.Map<ApiScope>(model);
         }
     }
 }

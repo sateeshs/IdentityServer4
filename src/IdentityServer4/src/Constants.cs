@@ -360,6 +360,7 @@ namespace IdentityServer4
 
             // Operational
             public const string PersistedGrant = "PersistedGrants";
+            public const string DeviceFlowCodes = "DeviceFlowCodes";
         }
 
     }

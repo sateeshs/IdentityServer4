@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using IdentityServer4.Stores.MongoDB;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -53,7 +54,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IIdentityServerBuilder AddMongoDbIdentityResources(this IIdentityServerBuilder builder, IEnumerable<IdentityResource> identityResources)
         {
             builder.Services.AddSingleton(identityResources);
-            builder.AddResourceStore< IdentityServer4.Stores.MongoDB.ResourceStore>();
+            builder.AddResourceStore<IdentityServer4.Stores.MongoDB.ResourceStore>();
 
             return builder;
         }
@@ -193,7 +194,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             var existingCors = builder.Services.Where(x => x.ServiceType == typeof(ICorsPolicyService)).LastOrDefault();
             if (existingCors != null &&
-                existingCors.ImplementationType == typeof(DefaultCorsPolicyService) &&
+                existingCors.ImplementationType == typeof(InMemoryCorsPolicyService) &&
                 existingCors.Lifetime == ServiceLifetime.Transient)
             {
                 // if our default is registered, then overwrite with the InMemoryCorsPolicyService
@@ -228,7 +229,8 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IIdentityServerBuilder AddInMemoryPersistedGrants(this IIdentityServerBuilder builder)
         {
             builder.Services.TryAddSingleton<IPersistedGrantStore, InMemoryPersistedGrantStore>();
-            builder.Services.TryAddSingleton<IDeviceFlowStore, InMemoryDeviceFlowStore>();
+            builder.Services.TryAddSingleton<IPersistedGrantStore, MongoDbPersistedGrantStore>();
+            builder.Services.TryAddSingleton<IDeviceFlowStore, IdentityServer4.Stores.MongoDb.MongoDbDeviceFlowStore>();
 
             return builder;
         }

@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.HttpOverrides;
 using IdentityServerHost.Quickstart.UI;
 using IdentityServer4.Extensions;
+using IdentityServer4.Stores.MongoDB;
 
 namespace IdentityServerHost
 {
@@ -60,21 +61,21 @@ namespace IdentityServerHost
                 .AddMongoDbIdentityResources(Resources.IdentityResources)
                 .AddMongoDbApiScopes(Resources.ApiScopes)
                 .AddMongoDbApiResources(Resources.ApiResources)
-
+                .AddTestUsers(TestUsers.Users)
                 //.AddInMemoryClients(Clients.Get())
                 //.AddInMemoryIdentityResources(Resources.IdentityResources)
                 //.AddInMemoryApiScopes(Resources.ApiScopes)
                 //.AddInMemoryApiResources(Resources.ApiResources)
                 .AddSigningCredential()
-                .AddExtensionGrantValidator<Extensions.ExtensionGrantValidator>()
-                .AddExtensionGrantValidator<Extensions.NoSubjectExtensionGrantValidator>()
-                .AddJwtBearerClientAuthentication()
-                .AddAppAuthRedirectUriValidator()
-                .AddTestUsers(TestUsers.Users)
-                .AddProfileService<HostProfileService>()
-                .AddCustomTokenRequestValidator<ParameterizedScopeTokenRequestValidator>()
-                .AddScopeParser<ParameterizedScopeParser>()
-                .AddMutualTlsSecretValidators();
+                //.AddExtensionGrantValidator<Extensions.ExtensionGrantValidator>()
+                //.AddExtensionGrantValidator<Extensions.NoSubjectExtensionGrantValidator>()
+                //.AddJwtBearerClientAuthentication()
+                //.AddAppAuthRedirectUriValidator()
+                //.AddProfileService<HostProfileService>()
+                //.AddCustomTokenRequestValidator<ParameterizedScopeTokenRequestValidator>()
+                //.AddScopeParser<ParameterizedScopeParser>()
+                //.AddMutualTlsSecretValidators()
+                ;
 
             // use this for persisted grants store
             // var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
@@ -84,7 +85,7 @@ namespace IdentityServerHost
             //     options.ConfigureDbContext = b => b.UseSqlite(connectionString,
             //         sql => sql.MigrationsAssembly(migrationsAssembly));
             // });
-                
+
 
             services.AddExternalIdentityProviders();
 
@@ -133,6 +134,7 @@ namespace IdentityServerHost
                 endpoints.MapDefaultControllerRoute();
             });
         }
+
     }
 
     public static class BuilderExtensions
@@ -162,13 +164,13 @@ namespace IdentityServerHost
         }
 
         // use this for persisted grants store
-        // public static void InitializePersistedGrantsStore(this IApplicationBuilder app)
-        // {
-        //     using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
-        //     {
-        //         serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
-        //     }
-        // }
+        public static void InitializePersistedGrantsStore(this IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                serviceScope.ServiceProvider.GetRequiredService<MongoDbPersistedGrantStore>();
+            }
+        }
     }
 
     public static class ServiceExtensions

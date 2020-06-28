@@ -6,9 +6,9 @@
 
 namespace IdentityServer4.MongoDB.Entities
 {
-    public class ClientSecret : Secret
+    public class ApiResourceProperty : Property
     {
-        public int ClientId { get; set; }
-        public Client Client { get; set; }
+        public int ApiResourceId { get; set; }
+        public ApiResource ApiResource { get; set; }
     }
 }
