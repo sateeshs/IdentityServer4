@@ -66,7 +66,7 @@ namespace IdentityServer4.Stores.MongoDB
                 _logger.LogDebug("Did not find {api} API resource in database", name);
             }
 
-            return Task.FromResult(api.ToModel());
+            return Task.FromResult(api);
         }
 
         public Task<IEnumerable<ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames)
@@ -80,11 +80,11 @@ namespace IdentityServer4.Stores.MongoDB
 
             var apis = 
                 from api in _context.ApiResources
-                where api.Scopes.Where(x => names.Contains(x.Name)).Any()
+                where api.Scopes.Where(x => names.Contains(x)).Any()
                 select api;
 
             var results = apis.ToArray();
-            var models = results.Select(x => x.ToModel()).ToArray();
+            var models = results.Select(x => x).ToArray();
 
             _logger.LogDebug("Found {scopes} API scopes in database", models.SelectMany(x => x.Scopes).Select(x => x));
 
@@ -114,7 +114,7 @@ namespace IdentityServer4.Stores.MongoDB
 
             _logger.LogDebug("Found {scopes} identity scopes in database", results.Select(x => x.Name));
 
-            return Task.FromResult(results.Select(x => x.ToModel()).ToArray().AsEnumerable());
+            return Task.FromResult(results.Select(x => x).ToArray().AsEnumerable());
         }
 
         public Task<IEnumerable<IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames)

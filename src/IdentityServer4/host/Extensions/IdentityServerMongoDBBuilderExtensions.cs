@@ -1,7 +1,7 @@
 using IdentityServer4;
 using IdentityServer4.Configuration;
 using IdentityServer4.MongoDB.DbContexts;
-using IdentityServer4.MongoDB.Entities;
+using IdentityServer4.Models;
 using IdentityServer4.MongoDB.Interfaces;
 using IdentityServer4.Options;
 using IdentityServer4.Services;

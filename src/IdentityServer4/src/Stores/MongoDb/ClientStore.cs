@@ -1,4 +1,4 @@
-﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 using IdentityServer4.Models;
@@ -27,7 +27,7 @@ namespace IdentityServer4.Stores.MongoDB
         {
             var client = _context.Clients.FirstOrDefault(x => x.ClientId == clientId);
 
-            var model = client?.ToModel();
+            var model = client;
 
             _logger.LogDebug("{clientId} found in database: {clientIdFound}", clientId, model != null);
 

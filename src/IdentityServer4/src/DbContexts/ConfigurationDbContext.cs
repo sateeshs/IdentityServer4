@@ -3,7 +3,7 @@
 
 
 using IdentityServer4.Configuration;
-using IdentityServer4.MongoDB.Entities;
+using IdentityServer4.Models;
 using IdentityServer4.MongoDB.Interfaces;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
