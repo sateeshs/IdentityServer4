@@ -336,5 +336,31 @@ namespace IdentityServer4
             public const string P384 = "1.3.132.0.34";
             public const string P521 = "1.3.132.0.35";
         }
+        public class TableNames
+        {
+            // Configuration
+            public const string IdentityResource = "IdentityResources";
+            public const string IdentityClaim = "IdentityClaims";
+
+            public const string ApiResource = "ApiResources";
+            public const string ApiSecret = "ApiSecrets";
+            public const string ApiScope = "ApiScopes";
+            public const string ApiClaim = "ApiClaims";
+            public const string ApiScopeClaim = "ApiScopeClaims";
+
+            public const string Client = "Clients";
+            public const string ClientGrantType = "ClientGrantTypes";
+            public const string ClientRedirectUri = "ClientRedirectUris";
+            public const string ClientPostLogoutRedirectUri = "ClientPostLogoutRedirectUris";
+            public const string ClientScopes = "ClientScopes";
+            public const string ClientSecret = "ClientSecrets";
+            public const string ClientClaim = "ClientClaims";
+            public const string ClientIdPRestriction = "ClientIdPRestrictions";
+            public const string ClientCorsOrigin = "ClientCorsOrigins";
+
+            // Operational
+            public const string PersistedGrant = "PersistedGrants";
+        }
+
     }
 }

@@ -21,6 +21,7 @@ using IdentityServerHost.Extensions;
 using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.HttpOverrides;
 using IdentityServerHost.Quickstart.UI;
+using IdentityServer4.Extensions;
 
 namespace IdentityServerHost
 {
@@ -53,10 +54,12 @@ namespace IdentityServerHost
                     options.MutualTls.DomainName = "mtls";
                     //options.MutualTls.AlwaysEmitConfirmationClaim = true;
                 })
-                .AddInMemoryClients(Clients.Get())
-                .AddInMemoryIdentityResources(Resources.IdentityResources)
-                .AddInMemoryApiScopes(Resources.ApiScopes)
-                .AddInMemoryApiResources(Resources.ApiResources)
+                .AddConfigurationStore(_config.GetSection("MongoDB"))
+                .AddOperationalStore(_config.GetSection("MongoDB"))
+                //.AddInMemoryClients(Clients.Get())
+                //.AddInMemoryIdentityResources(Resources.IdentityResources)
+                //.AddInMemoryApiScopes(Resources.ApiScopes)
+                //.AddInMemoryApiResources(Resources.ApiResources)
                 .AddSigningCredential()
                 .AddExtensionGrantValidator<Extensions.ExtensionGrantValidator>()
                 .AddExtensionGrantValidator<Extensions.NoSubjectExtensionGrantValidator>()

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   
   <PropertyGroup>
     <PackageId>IdentityServer4</PackageId>
@@ -40,8 +40,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="IdentityServer4.Storage" />
     <PackageReference Include="IdentityModel" />
+    <PackageReference Include="MongoDB.Driver" Version="2.10.4" />
 
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />
