@@ -44,6 +44,19 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return builder;
         }
+        /// <summary>
+        /// Adds the in memory identity resources.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <param name="identityResources">The identity resources.</param>
+        /// <returns></returns>
+        public static IIdentityServerBuilder AddMongoDbIdentityResources(this IIdentityServerBuilder builder, IEnumerable<IdentityResource> identityResources)
+        {
+            builder.Services.AddSingleton(identityResources);
+            builder.AddResourceStore< IdentityServer4.Stores.MongoDB.ResourceStore>();
+
+            return builder;
+        }
 
         /// <summary>
         /// Adds the in memory identity resources.
@@ -72,7 +85,20 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return builder;
         }
-        
+        /// <summary>
+        /// Adds the in memory API resources.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <param name="apiResources">The API resources.</param>
+        /// <returns></returns>
+        public static IIdentityServerBuilder AddMongoDbApiResources(this IIdentityServerBuilder builder, IEnumerable<ApiResource> apiResources)
+        {
+            builder.Services.AddSingleton(apiResources);
+            builder.AddResourceStore<IdentityServer4.Stores.MongoDB.ResourceStore>();
+
+            return builder;
+        }
+
         /// <summary>
         /// Adds the in memory API resources.
         /// </summary>
@@ -97,6 +123,19 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             builder.Services.AddSingleton(apiScopes);
             builder.AddResourceStore<InMemoryResourcesStore>();
+
+            return builder;
+        }
+        /// <summary>
+        /// Adds the in memory API scopes.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <param name="apiScopes">The API scopes.</param>
+        /// <returns></returns>
+        public static IIdentityServerBuilder AddMongoDbApiScopes(this IIdentityServerBuilder builder, IEnumerable<ApiScope> apiScopes)
+        {
+            builder.Services.AddSingleton(apiScopes);
+            builder.AddResourceStore<IdentityServer4.Stores.MongoDB.ResourceStore>();
 
             return builder;
         }
@@ -130,6 +169,31 @@ namespace Microsoft.Extensions.DependencyInjection
             var existingCors = builder.Services.Where(x => x.ServiceType == typeof(ICorsPolicyService)).LastOrDefault();
             if (existingCors != null && 
                 existingCors.ImplementationType == typeof(DefaultCorsPolicyService) && 
+                existingCors.Lifetime == ServiceLifetime.Transient)
+            {
+                // if our default is registered, then overwrite with the InMemoryCorsPolicyService
+                // otherwise don't overwrite with the InMemoryCorsPolicyService, which uses the custom one registered by the host
+                builder.Services.AddTransient<ICorsPolicyService, InMemoryCorsPolicyService>();
+            }
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds the in memory clients.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <param name="clients">The clients.</param>
+        /// <returns></returns>
+        public static IIdentityServerBuilder AddMongoDbClients(this IIdentityServerBuilder builder, IEnumerable<Client> clients)
+        {
+            builder.Services.AddSingleton(clients);
+
+            builder.AddClientStore<IdentityServer4.Stores.MongoDB.ClientStore>();
+
+            var existingCors = builder.Services.Where(x => x.ServiceType == typeof(ICorsPolicyService)).LastOrDefault();
+            if (existingCors != null &&
+                existingCors.ImplementationType == typeof(DefaultCorsPolicyService) &&
                 existingCors.Lifetime == ServiceLifetime.Transient)
             {
                 // if our default is registered, then overwrite with the InMemoryCorsPolicyService

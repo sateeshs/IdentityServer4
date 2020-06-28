@@ -11,15 +11,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityServer4.Extensions;
 
 namespace IdentityServer4.Stores.MongoDB
 {
-    public class PersistedGrantStore : IPersistedGrantStore
+    public class MongoDbPersistedGrantStore : IPersistedGrantStore
     {
         private readonly IPersistedGrantDbContext _context;
-        private readonly ILogger<PersistedGrantStore> _logger;
+        private readonly ILogger<MongoDbPersistedGrantStore> _logger;
 
-        public PersistedGrantStore(IPersistedGrantDbContext context, ILogger<PersistedGrantStore> logger)
+        public MongoDbPersistedGrantStore(IPersistedGrantDbContext context, ILogger<MongoDbPersistedGrantStore> logger)
         {
             _context = context;
             _logger = logger;
@@ -30,7 +31,7 @@ namespace IdentityServer4.Stores.MongoDB
             try
             {
                 _logger.LogDebug("Try to save or update {persistedGrantKey} in database", token.Key);
-                await _context.InsertOrUpdate(t => t.Key == token.Key, token.ToEntity());
+                await _context.InsertOrUpdate(t => t.Key == token.Key, token);
                 _logger.LogDebug("{persistedGrantKey} stored in database", token.Key);
             }
             catch (Exception ex)
@@ -43,7 +44,7 @@ namespace IdentityServer4.Stores.MongoDB
         public Task<PersistedGrant> GetAsync(string key)
         {
             var persistedGrant = _context.PersistedGrants.FirstOrDefault(x => x.Key == key);
-            var model = persistedGrant.ToModel();
+            var model = persistedGrant;
 
             _logger.LogDebug("{persistedGrantKey} found in database: {persistedGrantKeyFound}", key, model != null);
 
@@ -53,7 +54,7 @@ namespace IdentityServer4.Stores.MongoDB
         public Task<IEnumerable<PersistedGrant>> GetAllAsync(string subjectId)
         {
             var persistedGrants = _context.PersistedGrants.Where(x => x.SubjectId == subjectId).ToList();
-            var model = persistedGrants.Select(x => x.ToModel());
+            var model = persistedGrants.Select(x => x);
 
             _logger.LogDebug("{persistedGrantCount} persisted grants found for {subjectId}", persistedGrants.Count, subjectId);
 
@@ -93,12 +94,42 @@ namespace IdentityServer4.Stores.MongoDB
 
         public Task<IEnumerable<PersistedGrant>> GetAllAsync(PersistedGrantFilter filter)
         {
-            throw new NotImplementedException();
+            filter.Validate();
+
+            var items = Filter(filter);
+
+            return Task.FromResult(items);
         }
 
         public Task RemoveAllAsync(PersistedGrantFilter filter)
         {
-            throw new NotImplementedException();
+            _context.Remove(x=>x.SubjectId == filter.SubjectId && x.ClientId == filter.ClientId);
+
+            return Task.CompletedTask;
+        }
+        private IEnumerable<PersistedGrant> Filter(PersistedGrantFilter filter)
+        {
+            var query =_context.PersistedGrants;
+
+            if (!String.IsNullOrWhiteSpace(filter.ClientId))
+            {
+                query = query.Where(x => x.ClientId == filter.ClientId);
+            }
+            //if (!String.IsNullOrWhiteSpace(filter.SessionId))
+            //{
+            //    query = query.Where(x => x.SessionId == filter.SessionId);
+            //}
+            if (!String.IsNullOrWhiteSpace(filter.SubjectId))
+            {
+                query = query.Where(x => x.SubjectId == filter.SubjectId);
+            }
+            if (!String.IsNullOrWhiteSpace(filter.Type))
+            {
+                query = query.Where(x => x.Type == filter.Type);
+            }
+
+            var items = query.ToArray().AsEnumerable();
+            return items;
         }
     }
 }

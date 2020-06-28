@@ -79,7 +79,7 @@ namespace IdentityServer4.Extensions
 
             builder.Services.AddScoped<IPersistedGrantDbContext, PersistedGrantDbContext>();
 
-            builder.Services.AddTransient<IPersistedGrantStore, PersistedGrantStore>();
+            builder.Services.AddTransient<IPersistedGrantStore, MongoDbPersistedGrantStore>();
 
             var tokenCleanupOptions = new TokenCleanupOptions();
             tokenCleanUpOptions?.Invoke(tokenCleanupOptions);
