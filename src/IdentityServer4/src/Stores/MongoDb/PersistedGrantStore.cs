@@ -14,12 +14,12 @@ using System.Threading.Tasks;
 
 namespace IdentityServer4.Stores.MongoDB
 {
-    public class PersistedGrantStore : IPersistedGrantStore
+    public class MongoDbPersistedGrantStore : IPersistedGrantStore
     {
         private readonly IPersistedGrantDbContext _context;
-        private readonly ILogger<PersistedGrantStore> _logger;
+        private readonly ILogger<MongoDbPersistedGrantStore> _logger;
 
-        public PersistedGrantStore(IPersistedGrantDbContext context, ILogger<PersistedGrantStore> logger)
+        public MongoDbPersistedGrantStore(IPersistedGrantDbContext context, ILogger<MongoDbPersistedGrantStore> logger)
         {
             _context = context;
             _logger = logger;

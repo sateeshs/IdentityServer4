@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityServer4.Stores.MongoDB;
 
 namespace IdentityServer4.Extensions
 {
@@ -79,7 +80,7 @@ namespace IdentityServer4.Extensions
 
             builder.Services.AddScoped<IPersistedGrantDbContext, PersistedGrantDbContext>();
 
-            builder.Services.AddTransient<IPersistedGrantStore, PersistedGrantStore>();
+            builder.Services.AddTransient<IPersistedGrantStore, MongoDbPersistedGrantStore>();
 
             var tokenCleanupOptions = new TokenCleanupOptions();
             tokenCleanUpOptions?.Invoke(tokenCleanupOptions);

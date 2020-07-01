@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using IdentityServer4.Stores.MongoDB;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -164,7 +165,8 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IIdentityServerBuilder AddInMemoryPersistedGrants(this IIdentityServerBuilder builder)
         {
             builder.Services.TryAddSingleton<IPersistedGrantStore, InMemoryPersistedGrantStore>();
-            builder.Services.TryAddSingleton<IDeviceFlowStore, InMemoryDeviceFlowStore>();
+            builder.Services.TryAddSingleton<IPersistedGrantStore, MongoDbPersistedGrantStore>();
+            builder.Services.TryAddSingleton<IDeviceFlowStore, MongoDbDeviceFlowStore>();
 
             return builder;
         }

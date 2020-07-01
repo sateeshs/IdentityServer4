@@ -7,12 +7,10 @@ using AutoMapper;
 namespace IdentityServer4.MongoDB.Mappers
 {
     /// <summary>
-    /// AutoMapper Config for PersistedGrant
-    /// Between Model and Entity
-    /// <seealso cref="https://github.com/AutoMapper/AutoMapper/wiki/Configuration">
-    /// </seealso>
+    /// Defines entity/model mapping for persisted grants.
     /// </summary>
-    public class PersistedGrantMapperProfile : Profile
+    /// <seealso cref="AutoMapper.Profile" />
+    public class PersistedGrantMapperProfile:Profile
     {
         /// <summary>
         /// <see cref="PersistedGrantMapperProfile">
@@ -20,11 +18,8 @@ namespace IdentityServer4.MongoDB.Mappers
         /// </summary>
         public PersistedGrantMapperProfile()
         {
-            // entity to model
-            CreateMap<Entities.PersistedGrant, Models.PersistedGrant>(MemberList.Destination);
-
-            // model to entity
-            CreateMap<Models.PersistedGrant, Entities.PersistedGrant>(MemberList.Source);
+            CreateMap<Entities.PersistedGrant, Models.PersistedGrant>(MemberList.Destination)
+                .ReverseMap();
         }
     }
 }

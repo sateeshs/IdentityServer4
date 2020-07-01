@@ -1,16 +1,16 @@
 ﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+
+using System.Collections.Generic;
 using AutoMapper;
-using IdentityServer4.MongoDB.Entities;
-using System.Linq;
 
 namespace IdentityServer4.MongoDB.Mappers
 {
     /// <summary>
-    /// AutoMapper configuration for identity resource
-    /// Between model and entity
+    /// Defines entity/model mapping for identity resources.
     /// </summary>
+    /// <seealso cref="AutoMapper.Profile" />
     public class IdentityResourceMapperProfile : Profile
     {
         /// <summary>
@@ -18,17 +18,17 @@ namespace IdentityServer4.MongoDB.Mappers
         /// </summary>
         public IdentityResourceMapperProfile()
         {
-            // entity to model
-            CreateMap<IdentityResource, Models.IdentityResource>(MemberList.Destination)
-                .ForMember(x => x.Properties,
-                    opt => opt.MapFrom(src => src.Properties.ToDictionary(item => item.Key, item => item.Value)))
-                .ForMember(x => x.UserClaims, opt => opt.MapFrom(src => src.UserClaims.Select(x => x.Type)));
+            CreateMap<Entities.IdentityResourceProperty, KeyValuePair<string, string>>()
+                .ReverseMap();
 
-            // model to entity
-            CreateMap<Models.IdentityResource, IdentityResource>(MemberList.Source)
-                .ForMember(x => x.Properties,
-                    opt => opt.MapFrom(src => src.Properties.ToDictionary(item => item.Key, item => item.Value)))
-                .ForMember(x => x.UserClaims, opts => opts.MapFrom(src => src.UserClaims.Select(x => new IdentityClaim { Type = x })));
+            CreateMap<Entities.IdentityResource, Models.IdentityResource>(MemberList.Destination)
+                .ConstructUsing(src => new Models.IdentityResource())
+                .ReverseMap();
+
+            CreateMap<Entities.IdentityResourceClaim, string>()
+               .ConstructUsing(x => x.Type)
+               .ReverseMap()
+               .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src));
         }
     }
 }

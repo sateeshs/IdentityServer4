@@ -26,6 +26,11 @@ using static IdentityServer4.Constants;
 using IdentityServer4.Extensions;
 using IdentityServer4.Hosting.FederatedSignOut;
 using IdentityServer4.Services.Default;
+using IdentityServer4.MongoDB.Interfaces;
+using IdentityServer4.MongoDB.DbContexts;
+using IdentityServer4.Infrastructure;
+using IdentityServer4.Stores.MongoDB;
+using IdentityServer4.Stores.MongoDb;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -144,7 +149,18 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static IIdentityServerBuilder AddPluggableServices(this IIdentityServerBuilder builder)
         {
-            builder.Services.TryAddTransient<IPersistedGrantService, DefaultPersistedGrantService>();
+            
+            builder.Services.TryAddTransient<IPersistedGrantDbContext, PersistedGrantDbContext>();
+            builder.Services.TryAddTransient<IPersistedDeviceFlowDbContext, PersistedDeviceFlowDbContext>();
+
+            
+            builder.Services.TryAddTransient<IPersistedGrantStore, MongoDbPersistedGrantStore>();
+            builder.Services.TryAddTransient<IDeviceFlowStore, MongoDbDeviceFlowStore>();
+
+            builder.Services.TryAddTransient<IPersistedGrantStore, MongoDbPersistedGrantService>();
+
+
+            //builder.Services.TryAddTransient<IPersistedGrantService, DefaultPersistedGrantService>();
             builder.Services.TryAddTransient<IKeyMaterialService, DefaultKeyMaterialService>();
             builder.Services.TryAddTransient<ITokenService, DefaultTokenService>();
             builder.Services.TryAddTransient<ITokenCreationService, DefaultTokenCreationService>();
