@@ -56,6 +56,11 @@ namespace IdentityServerHost
                 })
                 .AddConfigurationStore(_config.GetSection("MongoDB"))
                 .AddOperationalStore(_config.GetSection("MongoDB"))
+                .AddMongoDbClients(Clients.Get())
+                .AddMongoDbIdentityResources(Resources.IdentityResources)
+                .AddMongoDbApiScopes(Resources.ApiScopes)
+                .AddMongoDbApiResources(Resources.ApiResources)
+
                 //.AddInMemoryClients(Clients.Get())
                 //.AddInMemoryIdentityResources(Resources.IdentityResources)
                 //.AddInMemoryApiScopes(Resources.ApiScopes)

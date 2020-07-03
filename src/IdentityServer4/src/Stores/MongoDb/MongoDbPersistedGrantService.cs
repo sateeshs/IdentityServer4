@@ -2,6 +2,8 @@ using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.MongoDB.Interfaces;
 using IdentityServer4.MongoDB.Mappers;
+using IdentityServer4.Services;
+using IdentityServer4.Stores.Serialization;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -11,13 +13,14 @@ using System.Threading.Tasks;
 
 namespace IdentityServer4.Stores.MongoDb
 {
-    public class MongoDbPersistedGrantService : IPersistedGrantStore
+    public class MongoDbPersistedGrantService : IPersistedGrantService
     {
         /// <summary>
         /// The DbContext.
         /// </summary>
-        protected readonly IPersistedGrantDbContext Context;
+        protected readonly IPersistedGrantStore _store;
 
+        private readonly IPersistentGrantSerializer _serializer;
         /// <summary>
         /// The logger.
         /// </summary>
@@ -28,112 +31,126 @@ namespace IdentityServer4.Stores.MongoDb
         /// </summary>
         /// <param name="context">The context.</param>
         /// <param name="logger">The logger.</param>
-        public MongoDbPersistedGrantService(IPersistedGrantDbContext context, ILogger<MongoDbPersistedGrantService> logger)
+        public MongoDbPersistedGrantService(IPersistedGrantStore store,
+                                            IPersistentGrantSerializer serializer,
+                                            ILogger<MongoDbPersistedGrantService> logger)
         {
-            Context = context;
+            _store = store;
+            _serializer = serializer;
             Logger = logger;
         }
 
-        /// <inheritdoc/>
-        public virtual async Task StoreAsync(PersistedGrant token)
+
+        public async Task<IEnumerable<Grant>> GetAllGrantsAsync(string subjectId)
         {
-            var existing = Context.PersistedGrants.SingleOrDefault(x => x.Key == token.Key);
-            Logger.LogDebug("{persistedGrantKey} not found in database", token.Key);
+            if (String.IsNullOrWhiteSpace(subjectId)) throw new ArgumentNullException(nameof(subjectId));
+
+            var grants = (await _store.GetAllAsync(new PersistedGrantFilter { SubjectId = subjectId })).ToArray();
+
             try
             {
-                var persistedGrant = token.ToEntity();
-                await Context.InsertOrUpdate(x => x.Key == token.Key, persistedGrant);
+                var consents = grants.Where(x => x.Type == IdentityServerConstants.PersistedGrantTypes.UserConsent)
+                    .Select(x => _serializer.Deserialize<Consent>(x.Data))
+                    .Select(x => new Grant
+                    {
+                        ClientId = x.ClientId,
+                        SubjectId = subjectId,
+                        Scopes = x.Scopes,
+                        CreationTime = x.CreationTime,
+                        Expiration = x.Expiration
+                    });
 
+                var codes = grants.Where(x => x.Type == IdentityServerConstants.PersistedGrantTypes.AuthorizationCode)
+                    .Select(x => _serializer.Deserialize<AuthorizationCode>(x.Data))
+                    .Select(x => new Grant
+                    {
+                        ClientId = x.ClientId,
+                        SubjectId = subjectId,
+                        Description = x.Description,
+                        Scopes = x.RequestedScopes,
+                        CreationTime = x.CreationTime,
+                        Expiration = x.CreationTime.AddSeconds(x.Lifetime)
+                    });
+
+                var refresh = grants.Where(x => x.Type == IdentityServerConstants.PersistedGrantTypes.RefreshToken)
+                    .Select(x => _serializer.Deserialize<RefreshToken>(x.Data))
+                    .Select(x => new Grant
+                    {
+                        ClientId = x.ClientId,
+                        SubjectId = subjectId,
+                        Description = x.Description,
+                        Scopes = x.Scopes,
+                        CreationTime = x.CreationTime,
+                        Expiration = x.CreationTime.AddSeconds(x.Lifetime)
+                    });
+
+                var access = grants.Where(x => x.Type == IdentityServerConstants.PersistedGrantTypes.ReferenceToken)
+                    .Select(x => _serializer.Deserialize<Token>(x.Data))
+                    .Select(x => new Grant
+                    {
+                        ClientId = x.ClientId,
+                        SubjectId = subjectId,
+                        Description = x.Description,
+                        Scopes = x.Scopes,
+                        CreationTime = x.CreationTime,
+                        Expiration = x.CreationTime.AddSeconds(x.Lifetime)
+                    });
+
+                consents = Join(consents, codes);
+                consents = Join(consents, refresh);
+                consents = Join(consents, access);
+
+                return consents.ToArray();
             }
             catch (Exception ex)
             {
-                Logger.LogWarning("exception updating {persistedGrantKey} persisted grant in database: {error}", token.Key, ex.Message);
+                Logger.LogError(ex, "Failed processing results from grant store.");
             }
+
+            return Enumerable.Empty<Grant>();
         }
 
-        /// <inheritdoc/>
-        public virtual async Task<PersistedGrant> GetAsync(string key)
+        public Task RemoveAllGrantsAsync(string subjectId, string clientId = null, string sessionId = null)
         {
-            var persistedGrant = Context.PersistedGrants.FirstOrDefault(x => x.Key == key);
-            var model = persistedGrant?.ToModel();
-
-            Logger.LogDebug("{persistedGrantKey} found in database: {persistedGrantKeyFound}", key, model != null);
-
-            return model;
+            throw new NotImplementedException();
         }
-
-        /// <inheritdoc/>
-        public async Task<IEnumerable<PersistedGrant>> GetAllAsync(PersistedGrantFilter filter)
+        private IEnumerable<Grant> Join(IEnumerable<Grant> first, IEnumerable<Grant> second)
         {
-            filter.Validate();
+            var list = first.ToList();
 
-            var persistedGrants = Filter(filter).ToArray();
-            var model = persistedGrants.Select(x => x?.ToModel());
-
-            Logger.LogDebug("{persistedGrantCount} persisted grants found for {@filter}", persistedGrants.Length, filter);
-
-            return model;
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task RemoveAsync(string key)
-        {
-            var persistedGrant = Context.PersistedGrants.FirstOrDefault(x => x.Key == key);
-            if (persistedGrant != null)
+            foreach (var other in second)
             {
-                Logger.LogDebug("removing {persistedGrantKey} persisted grant from database", key);
-                try
+                var match = list.FirstOrDefault(x => x.ClientId == other.ClientId);
+                if (match != null)
                 {
-                    await Context.Remove(x => x.Key == key);
+                    match.Scopes = match.Scopes.Union(other.Scopes).Distinct();
+
+                    if (match.CreationTime > other.CreationTime)
+                    {
+                        // show the earlier creation time
+                        match.CreationTime = other.CreationTime;
+                    }
+
+                    if (match.Expiration == null || other.Expiration == null)
+                    {
+                        // show that there is no expiration to one of the grants
+                        match.Expiration = null;
+                    }
+                    else if (match.Expiration < other.Expiration)
+                    {
+                        // show the latest expiration
+                        match.Expiration = other.Expiration;
+                    }
+
+                    match.Description = match.Description ?? other.Description;
                 }
-                catch (Exception ex)
+                else
                 {
-                    Logger.LogInformation("exception removing {persistedGrantKey} persisted grant from database: {error}", key, ex.Message);
+                    list.Add(other);
                 }
             }
-            else
-            {
-                Logger.LogDebug("no {persistedGrantKey} persisted grant found in database", key);
-            }
-        }
 
-        /// <inheritdoc/>
-        public async Task RemoveAllAsync(PersistedGrantFilter filter)
-        {
-            filter.Validate();
-
-            var persistedGrants = Filter(filter).ToArray();
-
-            Logger.LogDebug("removing {persistedGrantCount} persisted grants from database for {@filter}", persistedGrants.Length, filter);
-
-            await Context.Remove(x => persistedGrants.Select(y => y.Key).Contains(x.Key));
-
-
-        }
-
-
-        private IQueryable<IdentityServer4.MongoDB.Entities.PersistedGrant> Filter(PersistedGrantFilter filter)
-        {
-            var query = Context.PersistedGrants.AsQueryable();
-
-            if (!String.IsNullOrWhiteSpace(filter.ClientId))
-            {
-                query = query.Where(x => x.ClientId == filter.ClientId);
-            }
-            if (!String.IsNullOrWhiteSpace(filter.SessionId))
-            {
-                query = query.Where(x => x.SessionId == filter.SessionId);
-            }
-            if (!String.IsNullOrWhiteSpace(filter.SubjectId))
-            {
-                query = query.Where(x => x.SubjectId == filter.SubjectId);
-            }
-            if (!String.IsNullOrWhiteSpace(filter.Type))
-            {
-                query = query.Where(x => x.Type == filter.Type);
-            }
-
-            return query;
+            return list;
         }
     }
 }

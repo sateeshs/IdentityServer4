@@ -71,14 +71,17 @@ namespace IdentityServer4.Stores.MongoDB
 
         public Task<IEnumerable<ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames)
         {
-            throw new NotImplementedException();
+            var results = _context.ApiResources.Where(x => apiResourceNames.Contains(x.Name)).ToList();
+            var models = results.Select(x => x.ToModel()).ToArray();
+            return Task.FromResult(models.AsEnumerable());
+
         }
 
         public Task<IEnumerable<ApiResource>> FindApiResourcesByScopeAsync(IEnumerable<string> scopeNames)
         {
             var names = scopeNames.ToArray();
             //TODO Need revist query
-            var apis = 
+            var apis =
                 from api in _context.ApiResources
                 where api.Scopes.Where(x => names.Contains(x.Scope)).Any()
                 select api;

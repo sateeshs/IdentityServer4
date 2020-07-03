@@ -45,6 +45,13 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return builder;
         }
+        public static IIdentityServerBuilder AddMongoDbIdentityResources(this IIdentityServerBuilder builder, IEnumerable<IdentityResource> identityResources)
+        {
+            builder.Services.AddSingleton(identityResources);
+            builder.AddResourceStore<ResourceStore>();
+
+            return builder;
+        }
 
         /// <summary>
         /// Adds the in memory identity resources.
@@ -73,7 +80,15 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return builder;
         }
-        
+        public static IIdentityServerBuilder AddMongoDbApiResources(this IIdentityServerBuilder builder, IEnumerable<ApiResource> apiResources)
+        {
+            builder.Services.AddSingleton(apiResources);
+            builder.AddResourceStore<ResourceStore>();
+
+            return builder;
+        }
+
+
         /// <summary>
         /// Adds the in memory API resources.
         /// </summary>
@@ -101,7 +116,13 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return builder;
         }
+        public static IIdentityServerBuilder AddMongoDbApiScopes(this IIdentityServerBuilder builder, IEnumerable<ApiScope> apiScopes)
+        {
+            builder.Services.AddSingleton(apiScopes);
+            builder.AddResourceStore<ResourceStore>();
 
+            return builder;
+        }
         /// <summary>
         /// Adds the in memory scopes.
         /// </summary>
@@ -140,6 +161,25 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return builder;
         }
+        public static IIdentityServerBuilder AddMongoDbClients(this IIdentityServerBuilder builder, IEnumerable<Client> clients)
+        {
+            builder.Services.AddSingleton(clients);
+
+            builder.AddClientStore<IdentityServer4.Stores.MongoDB.ClientStore>();
+
+            var existingCors = builder.Services.Where(x => x.ServiceType == typeof(ICorsPolicyService)).LastOrDefault();
+            if (existingCors != null &&
+                existingCors.ImplementationType == typeof(DefaultCorsPolicyService) &&
+                existingCors.Lifetime == ServiceLifetime.Transient)
+            {
+                // if our default is registered, then overwrite with the InMemoryCorsPolicyService
+                // otherwise don't overwrite with the InMemoryCorsPolicyService, which uses the custom one registered by the host
+                builder.Services.AddTransient<ICorsPolicyService, DefaultCorsPolicyService>();
+            }
+
+            return builder;
+        }
+
 
 
         /// <summary>
@@ -155,7 +195,13 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return builder.AddInMemoryClients(clients);
         }
+        public static IIdentityServerBuilder AddMongoDbClients(this IIdentityServerBuilder builder, IConfigurationSection section)
+        {
+            var clients = new List<Client>();
+            section.Bind(clients);
 
+            return builder.AddMongoDbClients(clients);
+        }
 
         /// <summary>
         /// Adds the in memory stores.

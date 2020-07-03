@@ -154,11 +154,9 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.TryAddTransient<IPersistedDeviceFlowDbContext, PersistedDeviceFlowDbContext>();
 
             
+            builder.Services.TryAddTransient<IPersistedGrantService, MongoDbPersistedGrantService>();
             builder.Services.TryAddTransient<IPersistedGrantStore, MongoDbPersistedGrantStore>();
             builder.Services.TryAddTransient<IDeviceFlowStore, MongoDbDeviceFlowStore>();
-
-            builder.Services.TryAddTransient<IPersistedGrantStore, MongoDbPersistedGrantService>();
-
 
             //builder.Services.TryAddTransient<IPersistedGrantService, DefaultPersistedGrantService>();
             builder.Services.TryAddTransient<IKeyMaterialService, DefaultKeyMaterialService>();
